@@ -63,6 +63,66 @@ export default function  NLQueryForm() {
       return JSON.stringify(data);
     },
   });
+  useCopilotAction({
+    name: "createRecord",
+    description: "Create a new record in the database",
+    parameters: [
+      { name: "record", type: "object", description: "Record data", required: true }
+    ],
+    handler: async ({ record }) => {
+      try {
+        const response = await axios.post(BASE_URL, record, {
+          headers: { "x-apikey": API_KEY, "Content-Type": "application/json" }
+        });
+        setData([...data, response.data]);
+        return response.data;
+      } catch (error) {
+        setError(error.message);
+        throw error;
+      }
+    }
+  });
+
+  useCopilotAction({
+    name: "updateRecord",
+    description: "Update an existing record by ID",
+    parameters: [
+      { name: "id", type: "string", required: true },
+      { name: "updates", type: "object", required: true }
+    ],
+    handler: async ({ id, updates }) => {
+      try {
+        const response = await axios.put(`${BASE_URL}/${id}`, updates, {
+          headers: { "x-apikey": API_KEY, "Content-Type": "application/json" }
+        });
+        setData(data.map(item => item._id === id ? response.data : item));
+        return response.data;
+      } catch (error) {
+        setError(error.message);
+        throw error;
+      }
+    }
+  });
+
+  useCopilotAction({
+    name: "deleteRecord",
+    description: "Delete a record by ID",
+    parameters: [
+      { name: "id", type: "string", required: true }
+    ],
+    handler: async ({ id }) => {
+      try {
+        await axios.delete(`${BASE_URL}/${id}`, {
+          headers: { "x-apikey": API_KEY }
+        });
+        setData(data.filter(item => item._id !== id));
+        return { success: true };
+      } catch (error) {
+        setError(error.message);
+        throw error;
+      }
+    }
+  });
 
   if (loading) return <div>Loading...</div>;
 
